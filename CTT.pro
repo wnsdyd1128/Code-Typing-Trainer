@@ -10,21 +10,17 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp \
-    resultscreen.cpp \
-    testscreen.cpp
+    mainwindow.cpp
 
 HEADERS += \
-    mainwindow.h \
-    resultscreen.h \
-    testscreen.h
+    mainwindow.h
 
 FORMS += \
-    mainwindow.ui \
-    resultscreen.ui \
-    testscreen.ui
+    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES +=

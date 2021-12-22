@@ -1,6 +1,4 @@
 #include "mainwindow.h"
-#include "resultscreen.h"
-#include "testscreen.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])

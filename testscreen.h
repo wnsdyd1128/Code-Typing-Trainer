@@ -6,7 +6,6 @@
 #include <QTime>
 #include <QString>
 #include <QFile>
-#include "resultscreen.h"
 namespace Ui {
   class TestScreen;
 }
@@ -28,10 +27,10 @@ public:
   bool isHolded();
 private:
   Ui::TestScreen *ui;
+  ResultScreen *rs;
   int remainMinute;
   int remainSecond;
   std::shared_ptr<QTimer> timer;
-  ResultScreen *rs;
   int holdingTime = 0;
   int countWord;
   int countCorrect;
