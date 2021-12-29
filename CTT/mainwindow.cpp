@@ -12,13 +12,15 @@ MainWindow::MainWindow(QWidget *parent)
   ui->stackedWidget->setCurrentIndex(0);
   currentIndex = 0;
   prevIndex = currentIndex;
+  countCorrectWord = 0;
+  countWrongWord = 0;
   decrementIndex(prevIndex);
   nextIndex = currentIndex + 1;
   startFlag = false;
   ui->myLineEdit->installEventFilter(this);
   connect(ui->myLineEdit, &QLineEdit::returnPressed, this, &MainWindow::showTypingCode);
-//  thread = new qTh(this);
-//  connect(thread, SIGNAL(setTypingCode(QString)), this, SLOT(showTypingCode(QString)));
+  //  thread = new qTh(this);
+  //  connect(thread, SIGNAL(setTypingCode(QString)), this, SLOT(showTypingCode(QString)));
 }
 
 MainWindow::~MainWindow()
@@ -36,7 +38,7 @@ void MainWindow::applyComboBoxToLimitTime(){
     setTimeVariable(5 * 60);
   holdingTime = 0;
   timer = std::make_shared<QTimer>();
-//  connect(timer.get(), SIGNAL(timeout()), this, SLOT(check()));
+  //  connect(timer.get(), SIGNAL(timeout()), this, SLOT(check()));
   connect(timer.get(), &QTimer::timeout, this, &MainWindow::check);
   timer->start(1000);
 }
@@ -51,14 +53,16 @@ void MainWindow::setTimeVariable(int time){
 
 void MainWindow::check(){
   if(holdingTime >= limitTime){
-//      thread->requestInterruption(); // Interrupt!
+      //      thread->requestInterruption(); // Interrupt!
       ui->stackedWidget->setCurrentIndex(2);
       timer->stop();
+      applyToResult(v.at(currentIndex), ui->myLineEdit->text()); // 마지막 입력에 대한 별도 처리
+      applyToFigure();
     }
   QTime stopwatch(0, remainMinute, remainSecond);
   QString mask = stopwatch.toString("mm : ss");
   ui->lcdRemainTime->display(mask);
-  remainSecond--;
+  setRemainSecond(remainSecond - 1);
   holdingTime++;
 }
 void MainWindow::on_startButton_clicked()
@@ -66,8 +70,9 @@ void MainWindow::on_startButton_clicked()
   startFlag = true;
   applyComboBoxToLimitTime();
   ui->stackedWidget->setCurrentIndex(1);
-  showTypingCode();
-//  thread->start();
+  ui->currentCode->setText(v.at(0));
+  ui->nextCode->setText(v.at(1));
+  //  thread->start();
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event){
@@ -120,39 +125,47 @@ void MainWindow::on_buttonBox_rejected()
 void MainWindow::setImage(){
   QString currentPath = QApplication::applicationDirPath();
   QPixmap mainwindowIcon(currentPath + "/text-box.png");
-  QPixmap timerIcon(currentPath + "/sand-clock.png");
+  QPixmap timerImage(currentPath + "/sand-clock.png");
+  QPixmap accuracyImage(currentPath + "/accuracy.png");
+  QPixmap speedImage(currentPath + "/speed.png");
   this->setWindowIcon(mainwindowIcon);
   this->setWindowTitle("Code Typing Trainer by JYP");
   int w = ui->timerIcon->width();
   int h = ui->timerIcon->height();
-  ui->timerIcon->setPixmap(timerIcon.scaled(w, h, Qt::KeepAspectRatio));
+  ui->timerIcon->setPixmap(timerImage.scaled(w, h, Qt::KeepAspectRatio));
   w = ui->remainTimeImage->width();
   h = ui->remainTimeImage->height();
-  ui->remainTimeImage->setPixmap(timerIcon.scaled(w, h, Qt::KeepAspectRatio));
+  ui->remainTimeImage->setPixmap(timerImage.scaled(w, h, Qt::KeepAspectRatio));
+  w = ui->speedIcon->width();
+  h = ui->speedIcon->height();
+  ui->speedIcon->setPixmap(speedImage.scaled(w, h, Qt::KeepAspectRatio));
+  w = ui->accuracyIcon->width();
+  h = ui->accuracyIcon->height();
+  ui->accuracyIcon->setPixmap(accuracyImage.scaled(w, h, Qt::KeepAspectRatio));
 
 }
 
 void MainWindow::showTypingCode(){
-//  unsigned int nextIndex = (thread->getCurrentIndex() + 1) % (thread->getSize());
-//  ui->currentCode->insertPlainText(curCode);
-//  QString nxtCode = thread->getQString(nextIndex);
-//  ui->nextCode->insertPlainText(nxtCode);
-//  std::cout << "Enter Pressed" << std::endl;
+  //  unsigned int nextIndex = (thread->getCurrentIndex() + 1) % (thread->getSize());
+  //  ui->currentCode->insertPlainText(curCode);
+  //  QString nxtCode = thread->getQString(nextIndex);
+  //  ui->nextCode->insertPlainText(nxtCode);
+  //  std::cout << "Enter Pressed" << std::endl;
+
   QString prvCode = v.at(prevIndex);
   QString curCode = v.at(currentIndex);
   QString nxtCode = v.at(nextIndex);
-
-  if(!startFlag){
-      ui->prevCode->setText(prvCode);
-    }
-  else{
-      startFlag = false;
-    }
-  ui->currentCode->setText(curCode);
-  ui->nextCode->setText(nxtCode);
+  QString iptCode = ui->myLineEdit->text();
+  applyToResult(curCode, iptCode);
   incrementIndex(prevIndex);
   incrementIndex(currentIndex);
   incrementIndex(nextIndex);
+  prvCode = v.at(prevIndex);
+  curCode = v.at(currentIndex);
+  nxtCode = v.at(nextIndex);
+  ui->prevCode->setText(prvCode);
+  ui->currentCode->setText(curCode);
+  ui->nextCode->setText(nxtCode);
   ui->myLineEdit->clear();
 }
 
@@ -186,6 +199,39 @@ void MainWindow::decrementIndex(uint32_t& idx){
   size_t size = v.size();
   idx = (idx + size - 1) % size; // idx-- if(idx < 0) idx = size - 1;
 }
-void MainWindow::applyToResult(const QStringList& sample, const QStringList& input){
+void MainWindow::applyToResult(const QString& sample, const QString& input){
+  QStringList sampleList = sample.split(" ");
+  QStringList inputList = input.split(" ");
+  if(sampleList.size() != inputList.size()){
+      int length;
+      if(sampleList.size() < inputList.size())
+        length = sampleList.size();
+      else
+        length = inputList.size();
+      for(int i = 0; i < length; i++){
+          if(sampleList.at(i) != inputList.at(i))
+            countWrongWord++;
+          else
+            countCorrectWord++;
+        }
+      countWrongWord += abs(sampleList.size() - inputList.size());
+    }
+  else{
+      for(int i = 0; i < sampleList.size(); i++){
+          if(sampleList.at(i) != inputList.at(i))
+            countWrongWord++;
+          else
+            countCorrectWord++;
+        }
+    }
+}
 
+void MainWindow::applyToFigure(){
+  uint32_t countTotalWord = countWrongWord + countCorrectWord;
+  speed = (countTotalWord) / static_cast<double>(limitTime);
+  accuracy = countCorrectWord / static_cast<double>(countTotalWord);
+  QString speedString = QString::number(speed * 100, 'f', 0);
+  QString accuracyString = QString::number(accuracy * 100, 'f', 0);
+  ui->speedFigure->setText(speedString + " WPM");
+  ui->accuracyFigure->setText(accuracyString + " %");
 }

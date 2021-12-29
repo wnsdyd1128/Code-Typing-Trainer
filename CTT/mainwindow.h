@@ -33,7 +33,8 @@ public:
   void setFile();
   void incrementIndex(uint32_t&);
   void decrementIndex(uint32_t&);
-  void applyToResult(const QStringList&, const QStringList&);
+  void applyToResult(const QString&, const QString&);
+  void applyToFigure();
 private slots:
   void on_startButton_clicked();
   void check();
@@ -51,10 +52,10 @@ private:
   uint32_t prevIndex;
   uint32_t currentIndex;
   uint32_t nextIndex;
-  int countCorrectWord;
-  int countWord;
-  double accuracy;
-  double speed;
+  uint32_t countCorrectWord;
+  uint32_t countWrongWord;
+  float accuracy;
+  float speed;
   bool startFlag;
 //  qTh* thread;
 protected:
